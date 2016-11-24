@@ -16,3 +16,11 @@ class Audio(db.Model):
 
     def __repr__(self):
         return '<Audio %r>' % self.id
+
+    @staticmethod
+    def get_audio_filename(book_id, chapter_id):
+        audio = Audio.query.filter(Audio.book_id == book_id, Audio.chapter_id == chapter_id).first()
+        if audio:
+            return audio.md5
+        else:
+            return ""

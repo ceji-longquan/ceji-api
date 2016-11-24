@@ -16,3 +16,11 @@ class Image(db.Model):
 
     def __repr__(self):
         return '<Image %r>' % self.id
+
+    @staticmethod
+    def get_image_filename(paragraph_id):
+        images = Image.query.filter(Image.paragraph_id == paragraph_id).all()
+        image_list = []
+        for image in images:
+            image_list.append("/image/%s" % image.md5)
+        return image_list

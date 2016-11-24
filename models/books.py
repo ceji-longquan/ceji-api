@@ -20,3 +20,13 @@ class Book(db.Model):
 
     def __repr__(self):
         return '<Book %r>' % self.id
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "language": self.lang,
+            "version": self.version,
+            "desc": self.desc,
+            "cover":""
+        }

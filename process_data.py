@@ -12,9 +12,9 @@ from models.annotations import Annotation
 
 BOOK_ID = 1
 TEXT_TYPE_MAP = {
-    "标题":0,
-    "序言":1,
-    "正文":2
+    u"标题":0,
+    u"序言":1,
+    u"正文":2
 }
 
 db.init_app(app)
@@ -37,7 +37,7 @@ image_df = image_df.reindex(image_df.index.drop(0))
 
 # 添加书籍记录
 def add_book():
-    book = Book(u"侧记", "zh-CN", 2, 0, "")
+    book = Book(u"侧记", "zh-CN", 1.12, 0, "学诚大和尚的生平事迹")
     db.session.add(book)
     db.session.commit()
 
@@ -45,17 +45,17 @@ def add_book():
 # 添加段落信息
 def add_paragraphs():
     df.dropna(axis=1, how='all').apply(parse_paragraph, axis=1)
-    db.commit()
+    db.session.commit()
 
 
 # 添加图片信息
-def add_image():
+def add_images():
     image_df.dropna(axis=1, how='all').apply(parse_image, axis=1)
     db.session.commit()
 
 
 # 添加注释信息
-def add_annotation():
+def add_annotations():
     df.dropna(axis=1, how='all').apply(parse_annotation, axis=1)
     db.session.commit()
 
@@ -72,8 +72,9 @@ def parse_paragraph(x):
     offset = x.get(u"时间", 0)
     content = x.get(u"文本内容")
     ctype = TEXT_TYPE_MAP.get(x.get(u"文本类型"))
+    position = x.get(u"段落")
     chapter, section, subsection = parse_section(x.get(u"章节"))
-    paragraph = Paragraph(BOOK_ID, offset, content, ctype, chapter, section, subsection)
+    paragraph = Paragraph(BOOK_ID, offset, content, ctype, chapter, section, subsection, position)
     db.session.add(paragraph)
 
 
@@ -97,9 +98,9 @@ def parse_keyword(content):
     pattern = r"\[\d+\].+?:{1}.+?\.{1}\s*?"
     keyword_pattern = "\[\d+\](.+?):(.+?)\."
     rst = re.compile(pattern, re.M).findall(content)
-    for annotation in rst:
+    for idx, annotation in enumerate(rst):
         rt = re.compile(keyword_pattern, re.M).search(annotation)
-        annotations.append((rt.group(1).strip(), rt.group(2).strip()))
+        annotations.append((idx + 1, rt.group(1).strip(), rt.group(2).strip()))
     return annotations
 
 
@@ -115,6 +116,11 @@ def parse_annotation(x):
                                        Paragraph.subsection == subsection).all()[p_id]
     paragraph_id = paragraph.id
     for annotation in parse_keyword(content):
-        keyword, desc = annotation
-        anno = Annotation(paragraph_id, keyword, desc)
+        idx, keyword, desc = annotation
+        anno = Annotation(paragraph_id, keyword, desc, idx)
         db.session.add(anno)
+
+add_book()
+add_paragraphs()
+add_annotations()
+add_images()
