@@ -4,6 +4,5 @@ env
 *.pyc
 doc.xlsx
 process.ipynb
-process_data.py
 configs
 *.ini
